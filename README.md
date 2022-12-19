@@ -114,7 +114,7 @@ let un: undefined = undefined;
 
 ### 引用类型
 
-Array
+**Array**
 
 ```ts
 // 声明方式 1
@@ -149,7 +149,7 @@ console.log(t); // [1, '2', 7]
 let c = t[2]; // error
 ```
 
-Object
+**Object**
 
 Object 在定义时可以直接使用 object 类型并赋值，但不能更改属性，原因是并没有使对象的内部具体的属性做限制，所以需要使用 {} 来定义内部类型。
 
@@ -177,570 +177,219 @@ obj = null; // error
 obj = undefined; // error
 ```
 
-function
+**function**
 
-定义函数的两种方式:一种为 function， 另一种为箭头函数/匿名函数。
-我们可以添加返回值和形参的类型，但我们可以省略返回值类型，因为 TypeScript 能够根据返回语句自动推断出返回值类型。（下面的演示为完整形式）
-
-```ts
-function setName2(name: string): string {
-  console.log("hello", name);
-}
-setName2("Domesy"); // err 返回值为空，要求返回string类型的返回值
-
-function setName3(name: string): string {
-  console.log("hello", name);
-  return 1;
-}
-setName3("Domesy"); // error 返回值类型不匹配
-```
-
-⭐ 注意：TS 中定义函数类型的语法与箭头函数相似，容易产生歧义，如下
+定义函数的两种方式:一种为 function， 另一种为箭头函数/匿名函数（这种方式很容易与箭头函数的写法混淆）。
+函数的类型只是由参数类型和返回值组成的。 函数中使用的捕获变量不会体现在类型里。
+如果函数没有返回任何值，你也必须指定返回值类型为 void 而不能留空。
 
 ```ts
-let myAdd: (x: number, y: number) => number;
-myAdd = function (x: number, y: number): number {
+// 使用关键字的形式
+let myAdd = function (x: number, y: number): number {
   return x + y;
 };
 
-// 看看这个
-const myAdd3 = (name: string) => console.log("hello", name);
-
-// 上面的很容易理解，下面的呢？
-let myAdd2: (x: number, y: number) => number = function (
+// 匿名函数形式
+let myAdd3: (baseValue: number, increment: number) => number = function (
   x: number,
   y: number
 ): number {
   return x + y;
 };
-```
 
-## 1. 类型系统
-
-### 1.1 类型推断
-
-通过感知 JavaScript 的工作原理，TypeScript 可以构建一个接受 JavaScript 代码但具有类型的类型系统。这个类型系统使得我们不需要添加额外的字符来显式地指定类型。如在 TS 中我们完全可以这样声明：
-
-```ts
-let helloWorld = "Hello World";
-```
-
-TypeScript 也会知道 helloWorld 是 string 类型，但这样我们是不推荐的。
-
-### 1.2 类型定义
-
-JavaScript 中的各种设计模式使得类型难以自动推断（如使用动态编程的模式）。为了使类型推断涵盖这些情况， TypeScript 支持扩展 JavaScript 语言，它可以让 TypeScript 知道如何去推断类型。
-
-如，要创建具有推断类型的对象，该类型包括 name: string 和 id: number，你可以使用 interface 关键字声明显式地描述此对象的内部数据的类型（也叫“结构”、“接口类型”）：
-
-```ts
-interface User {
-  name: string;
-  id: number;
-}
-```
-
-然后你可以声明一个符合此接口（interface）的 JavaScript 对象，在变量声明后使用像 : TypeName 这样的语法：
-
-```ts
-const user: User = {
-  name: "Hayes",
-  id: 0,
+// 声明并赋值拆分，可能更容易理解
+let myAdd: (x: number, y: number) => number;
+myAdd = function (x: number, y: number): number {
+  return x + y;
 };
 ```
 
-如果提供的对象与提供的接口不匹配，TypeScript 将警告。
+**类型推导**
 
-由于 JavaScript 支持面向对象，常常将接口声明与类一起使用：
-
-```ts
-interface User {
-  name: string;
-  id: number;
-}
-
-class UserAccount {
-  name: string;
-  id: number;
-
-  constructor(name: string, id: number) {
-    this.name = name;
-    this.id = id;
-  }
-}
-
-const user: User = new UserAccount("Murphy", 1);
-```
-
-您可以使用接口对参数进行注释，并将值传递给函数或者限制函数返回值类型系统：
+赋值语句的一边指定了类型但是另一边没有类型的话，TypeScript 编译器会自动识别出类型，这叫做“按上下文归类”，是类型推论的一种。
 
 ```ts
-interface User {
-  name: string;
-  id: number;
-}
+// The parameters `x` and `y` have the type number
+let myAdd2: (baseValue: number, increment: number) => number = function (x, y) {
+  return x + y;
+};
 
-function getAdminUser(): User {
-  //...
-}
-
-function deleteUser(user: User) {
-  // ...
-}
+// or
+let myAdd = function (x: number, y: number) {
+  return x + y;
+};
 ```
 
-JavaScript 中已经有一些基本类型可用：boolean、string、number、 null、 undefined 以及 ES6 的 Symbol 和 ES10 的 BigInt，它们都可以在接口中使用。TypeScript 将此列表扩展为更多的内容（type），还有更多如 any （允许任何类型）、unknown （确保使用此类型的人声明类型是什么）、 never （这种类型不可能发生）和 void （返回 undefined 或没有返回值的函数）。
+**函数参数类型**
 
-构建类型有两种语法： 接口和类型。 你应该更喜欢 interface。当需要特定功能时使用 type 。
-
-#### 数组类型
-
-在 TS 中,数组的元素类型系统必须保持一致
+- 可选参数： 在 TypeScript 里我们可以在参数名旁使用 ?实现可选参数的功能，且
+- 可选参数必须在必须参数后面。
 
 ```ts
-let arr: number[] = [123]; // //数字类型的数组
-var arr2: any[] = [1, "2", true]; //任意类型的数组
-
-let arr1: number[] = [1, 2, 3, "1"]; // err:不能将类型“string”赋值给类型“number”
-arr.unshift("1"); // err: 类型“string”的参数不能赋值给类型“number”的参数
-
-// 多维数组
-let data: number[][] = [
-  [1, 2],
-  [3, 4],
-];
-```
-
-数组泛型
-
-```ts
-// Array<类型>
-let arr: Array<number> = [1, 2, 3, 4, 5];
-```
-
-用接口表示数组，一般用来描述类数组
-
-```ts
-interface NumberArray {
-  [index: number]: number;
+function buildName(firstName: string, lastName?: string) {
+  if (lastName) return firstName + " " + lastName;
+  else return firstName;
 }
 
-let fibonacci: NumberArray = [1, 1, 2, 3, 5]; // 索引类型是数字时，值类型也必须是数字。
+let result1 = buildName("Bob");
+let result3 = buildName("Bob", "Adams");
+let result2 = buildName("Bob", "Adams", "Sr."); // error, too many parameters
 ```
 
-P.S. 函数参数 arguments 是类数组，使用 ts 内置对象 IArguments 定义
+- 默认参数：用 = 可以为参数提供一个默认值，当用户没有传参或传递的值是 undefined 时会被赋值。
+- 默认参数调用时可以被省略。
+- 带默认值的参数不需要放在必须参数的后面。 如果默认参数出现在必须参数前，不传参的情况必须明确传入 undefined 值来获得默认值。
 
 ```ts
-function Arr(...args: any): void {
-  let arr: IArguments = arguments;
-  // ...
+function buildName2(firstName: string, lastName = "Smith") {
+  return firstName + " " + lastName;
 }
-Arr(111, 222, 333);
+buildName("Bob", "Adams");
+buildName("Bob"); // 默认参数可以被省略调用
 
-//其中 IArguments 是 TypeScript 中定义好了的类型，它实际上就是：
-interface IArguments {
-  [index: number]: any;
-  length: number;
-  callee: Function;
+function buildName3(firstName = "Will", lastName: string) {
+  return firstName + " " + lastName;
 }
+
+let result1 = buildName3("Bob"); // error, too few parameters
+let result2 = buildName3("Bob", "Adams", "Sr."); // error, too many parameters
+let result3 = buildName3("Bob", "Adams"); // okay and returns "Bob Adams"
+let result4 = buildName3(undefined, "Adams"); // okay and returns "Will Adams"
 ```
 
-P.S. 元组（Tuple）是固定数量的不同类型的元素的组合，元组中的元素类型可以是不同的，而且数量固定。
+- 剩余参数：仍可以使用扩展运算符 ...
+- 剩余参数会被当做个数不限的可选参数，编译器会创建参数数组，名字是你在省略号后给定的名字，函数体内可以此数组。
 
 ```ts
-let arr: [number, string] = [1, "string"];
-
-let arr2: readonly [number, boolean, string, undefined] = [
-  1,
-  true,
-  "sring",
-  undefined,
-];
+const allCount = (...numbers: number[]) =>
+  console.log(`数字总和为：${numbers.reduce((val, item) => (val += item), 0)}`);
+allCount(1, 2, 3); //"数字总和为：6"
 ```
 
-#### 对象类型
+**函数重载**
 
-要用关键字 interface（接口），我的理解是使用 interface 来定义一种约束，让数据的结构满足约束的格式。
+js 本身是个动态语言，js 里函数根据传入不同的参数而返回不同类型的数据是很常见的。
+
+函数重载指使用相同名称和不同参数数量或类型创建多个方法的一种能力，表现为给同一个函数提供多个函数类型定义。（重载函数规定了形参与返回值的模式，执行函数负责逻辑业务的执行）
+
+一个简单的例子：
 
 ```ts
 interface Person {
-  name: string; // 属性
-  age: number; // 属性
-  say(lanuage: string): void; //方法
-}
-
-const pp: Person = {
-  name: "tom",
-  age: 18,
-  say(lanuage: string) {},
-};
-```
-
-接口的继承和合并
-
-```ts
-// 重名 interface 会默认合并
-interface A {
   name: string;
-}
-interface A {
   age: number;
 }
-var x: A = { name: "xx", age: 20 };
 
-// 接口之间可以存在继承关系
-
-interface B extends A {
-  address: string;
+function setInfo(name: string): boolean; //重载函数1
+function setInfo(name: string, age: number): Person; //重载函数2
+function setInfo(name: string, age?: number): any {
+  // 执行函数
+  // 执行函数会按照参数类型规则匹配重载函数
+  if (age === undefined) return Math.random() * 10 >= 5;
+  let person: Person = {
+    name,
+    age,
+  };
+  return person;
 }
+```
 
-let obj: B = {
-  age: 18,
-  name: "string",
-  address: "xxxxx花牛街",
+### this
+
+由于 ts 是 js 的超集，ts 程序员也需要弄清 this 工作机制并且当有 bug 的时候能够找出错误所在。幸运的是，ts 能通知你错误地使用了 this 的地方。
+
+如果想要理解 this 的工作原理请前往:[Understanding JavaScript Function Invocation and "this"](http://yehudakatz.com/2011/08/11/understanding-javascript-function-invocation-and-this/),Yehuda 的这篇文章详细的阐述了 this 的内部工作原理。
+
+**this 和箭头函数**
+
+JavaScript 里，this 的值在函数被调用的时候才会指定。 因此我们需要弄清楚函数调用的上下文是什么。 但这不是一件简单的事，尤其是在返回一个函数或将函数当做参数传递的时候。下面看一个例子：
+
+```js
+let deck = {
+  suits: ["hearts", "spades", "clubs", "diamonds"],
+  cards: Array(52),
+  createCardPicker: function () {
+    return function () {
+      let pickedCard = Math.floor(Math.random() * 52); //选牌
+      let pickedSuit = Math.floor(pickedCard / 13); //选花色
+
+      return { suit: this.suits[pickedSuit], card: pickedCard % 13 };
+    };
+  },
 };
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker();
+
+alert("card: " + pickedCard.card + " of " + pickedCard.suit);
 ```
 
-可选属性可以使用 `typeName?: type` 的形式定义
-任意属性使用 `[propName: type]: type` 的形式定义
-readonly 前缀则限制属性只读，不允许被赋值，如 `readonly id: number`
+因为 createCardPicker 返回的函数里的 this 被设置成了 window 而不是 deck 对象。 因为我们只是独立的调用了 cardPicker()，顶级的非方法式调用会将 this 视为 window。（注意：在严格模式下， this 为 undefined 而不是 window）。
 
-#### 补充：关于 void 空值类型
+为了解决这个问题，我们可以在函数被返回时就绑好正确的 this。 这样的话，无论之后怎么使用它，都会引用绑定的‘deck’对象。 我们可以提供一个显式的 this 参数来修改 this，或者使用 ES6 箭头函数，因为箭头函数能保存函数创建时的 this 值，而不是调用时的值。
 
-JavaScript 没有空值（Void）的概念，在 TypeScript 中，可以用 void 表示没有任何返回值的函数。
-void 类型的用法，主要是用在我们不希望调用者关心函数返回值的情况下，比如通常的异步回调函数。
+```ts
+function f(this: void) {}
+// or
+function f() {
+  return () => {};
+}
+```
+
+更好事情是，如果发生了以上情况，TypeScript 会发出警告，如果你给编译器设置了--noImplicitThis 标记。它会说明 this.suits[pickedSuit]里的 this 的类型为 any。这是因为 this 来自对象字面量里的函数表达式。让我们往例子里添加一些接口，Card 和 Deck，让类型重用能够变得清晰简单些：
+
+```ts
+interface Card {
+  suit: string;
+  card: number;
+}
+interface Deck {
+  suits: string[];
+  cards: number[];
+  createCardPicker(this: Deck): () => Card; // createCardPicker方法返回一个函数
+}
+
+let deck: Deck = {
+  suits: ["hearts", "spades", "clubs", "diamonds"],
+  cards: Array(52),
+  // NOTE: 该函数现在显式指定其被调用方的类型必须为 Dack
+  createCardPicker: function (this: Deck) {
+    return () => {
+      let pickedCard = Math.floor(Math.random() * 52);
+      let pickedSuit = Math.floor(pickedCard / 13);
+
+      return { suit: this.suits[pickedSuit], card: pickedCard % 13 };
+    };
+  },
+};
+
+let cardPicker = deck.createCardPicker();
+let pickedCard = cardPicker();
+
+console.log("card: " + pickedCard.card + " of " + pickedCard.suit);
+```
+
+**this 参数在回调函数里**
+
+当你将一个函数传递到某个函数里稍后会被调用时可能会出错。因为当回调被调用的时候，它们会被当成一个普通函数调用，this 将为 undefined。
+
+⭕ 这里[官方文档演示](https://www.tslang.cn/docs/handbook/functions.html)没有看懂，先挖个坑，以后有机会再来补。下面这个是 js 中回调函数 this 指向丢失的情况。
 
 ```js
-function voidFn(): void {
-  console.log("test void");
-}
-```
-
-void 还有一种用法是定义 undefined 和 null 类型
-
-```js
-let u: void = undefined;
-let n: void = null;
-```
-
-void 和 undefined 、null 最大的区别：
-undefined 和 null 是所有类型的子类型。也就是说 undefined 类型的变量，可以赋值给 string 类型的变量。
-
-```js
-let test: null = null;
-let num2: string = "1";
-
-num2 = test; //这样是没问题的
-
-//或者下面这样
-let test: undefined = undefined;
-let num2: string = "1";
-
-num2 = test;
-```
-
-但是 void 类型不可以分给其他类型
-
-```js
-let test: void = undefined;
-let num2: string = "1";
-
-num2 = test; // err: void 类型不可以分给其他类型
-```
-
-P.S. 如果在 tsconfig.json 开启了严格模式，那么 null 就不能 赋予 void 类型。
-
-```js
-{
-    "compilerOptions":{"strict": true}
-}
-```
-
-#### 补充：类型判断
-
-了解变量的类型， 使用 typeof：
-
-| 类型      | 推断语句                         |
-| --------- | -------------------------------- |
-| string    | typeof s === "string"            |
-| number    | typeof n === "number"            |
-| boolean   | typeof b === "boolean"           |
-| undefined | typeof undefined === "undefined" |
-| function  | typeof f === "function"          |
-| array     | Array.isArray(a)                 |
-
-如，你可以使函数根据传递的是字符串还是数组返回不同的值：
-
-```ts
-function wrapInArray(obj: string | string[]) {
-  return typeof obj === "string" ? [obj] : obj;
-}
-```
-
-### 1.3 组合类型
-
-使用 TypeScript，可以通过组合简单类型来创建复杂类型。有两种流行的方法可以做到这一点：联合和泛型。
-
-#### 联合
-
-使用联合，可以声明类型可以是许多类型中的一种。例如，可以将 boolean 类型描述为 true 或 false ：
-
-```ts
-type MyBool = true | false; // MyBool 被归类为 boolean。这是结构化类型系统的一个属性。
-```
-
-联合类型的一个流行用法是描述 string 或者 number 的字面量的合法值。
-
-```ts
-type WindowStates = "open" | "closed" | "minimized";
-type LockStates = "locked" | "unlocked";
-type PositiveOddNumbersUnderTen = 1 | 3 | 5 | 7 | 9;
-
-let W: WindowStates = "open"; // 这样是合法的
-let P: PositiveOddNumbersUnderTen = 199; // err 不能将类型 199 “赋值给类型PositiveOddNumbersUnderTen”
-```
-
-联合也提供了一种处理不同类型的方法。如，有一个函数处理 array 或者 string：
-
-```ts
-function getLength(obj: string | string[]) {
-  return obj.length;
-}
-```
-
-#### 泛型
-
-泛型为类型提供变量。可以理解为动态类型。
-
-- 数组泛型
-
-  一个常见的例子是数组。没有泛型的数组可以包含任何内容。带有泛型的数组可以描述数组包含的值。
-
-  ```ts
-  type StringArray = Array<string>;
-  type NumberArray = Array<number>;
-  type ObjectWithNameArray = Array<{ name: string }>;
-
-  // 数组泛型
-  let stringArr2: StringArray = ["a", "b"];
-  let objectWithNameArray: ObjectWithNameArray = [{ name: "jerry" }];
-  ```
-
-- 函数泛型
-
-  如有一个函数功能相同，但是类型不同，我们可以这样实现：
-
-  ```ts
-  function num(a: number, b: number): Array<number> {
-    return [a, b];
-  }
-  num(1, 2);
-  function str(a: string, b: string): Array<string> {
-    return [a, b];
-  }
-  str("独孤", "求败");
-  ```
-
-  使用函数泛型优化
-
-  ```ts
-  function change<T>(a: T, b: T): Array<T> {
-    return [a, b];
-  }
-
-  let stringChange = function (a: string, b: string) {
-    return change<string>(a, b);
-  };
-  let numberChange = function (a: number, b: number) {
-    return change<number>(a, b);
-  };
-  console.log(stringChange("a", "b"));
-  console.log(numberChange(1, 7));
-  ```
-
-  多个参数的情况:
-
-  ```ts
-  function sub<T, U>(a: T, b: U): Array<T | U> {
-    //...
-  }
-
-  sub<number, string>(1, "a");
-  ```
-
-- 泛型约束
-
-  ```ts
-  interface Len {
-    length: number;
-  }
-
-  function getLen<T extends Len>(a: T) {
-    return a.length;
-  }
-
-  getLen("abc"); // 3
-  getLen(1); // err ,因为 number 没有 length 属性
-  ```
-
-- 接口泛型
-
-  声明自己使用泛型的类型：
-
-  ```ts
-  interface MyInter<T> {
-    (arg: T): T;
-  }
-
-  function fn<T>(arg: T): T {
-    return arg;
-  }
-
-  let result: MyInter<number> = fn;
-
-  result(123);
-  ```
-
-- 对象字面量泛型,
-
-  ```ts
-  interface Backpack<Type> {
-    name: string;
-    add: (obj: Type) => void;
-    get: () => Type;
-  }
-
-  // declare 可以告诉 TypeScript 有一个常量，叫做`backpack`，并且不用担心它是从哪里来的
-  // declare const backpack: Backpack<string>;
-  const backpack: Backpack<string> = {
-    name: "backpack",
-    add(obj: string) {
-      console.log(obj);
-    },
-    get() {
-      return this.name;
-    },
-  };
-
-  // 对象是一个字符串，因为我们在上面声明了它作为 Backpack 的变量部分。
-  const object = backpack.get();
-
-  console.log(object); // backpack
-  ```
-
-  下面这个示例没有看懂 ⭐,来自:[小满 zs 泛型](https://xiaoman.blog.csdn.net/article/details/122490830)
-
-  ```ts
-  let foo: {
-    <T>(arg: T): T;
-  };
-
-  foo = function <T>(arg: T): T {
-    return arg;
-  };
-
-  foo(123);
-  ```
-
-- 泛型类
-
-  声明方法跟函数泛型类似。在实例化时，确定类型。
-
-  ```ts
-  class Sub<T> {
-    attr: T[] = [];
-    add(a: T): T[] {
-      return [a];
-    }
-  }
-
-  let s = new Sub<number>();
-  s.attr = [1, 2, 3];
-  s.add(123);
-  ```
-
-- 使用 keyof 约束对象
-
-  定义了 T 类型并 K 类型，使用 extends 关键字继承 object 类型的子类型，
-  然后使用 keyof 操作符获取 T 类型的所有键，它的返回类型是联合类型，
-  最后利用 extends 关键字约束 K 类型必须为 keyof T 联合类型的子类型
-
-  ```ts
-  function prop<T, K extends keyof T>(obj: T, key: K) {
-    return obj[key];
-  }
-
-  let o = { a: 1, b: 2, c: 3 };
-
-  prop(o, "a");
-  prop(o, "d"); //err
-  ```
-
-### 1.4 结构化的类型系统（structural type system）
-
-TypeScript 的一个核心原则是类型检查基于对象的属性和行为（type checking focuses on the shape that values have）。这有时被叫做“鸭子类型”或“结构类型”（structural typing）
-
-如下：在结构化的类型系统当中，如果两个对象具有相同的结构，则认为它们是相同类型的。
-
-```ts
-interface Point {
-  x: number;
-  y: number;
+function callback() {
+  console.log(this.a);
 }
 
-function logPoint(p: Point) {
-  console.log(`${p.x}, ${p.y}`);
+function fn(callback) {
+  callback();
 }
 
-const point = { x: 12, y: 26 };
-logPoint(point); // "12, 26" 这里会正常打印？？？
+let obj = {
+  a: 2,
+  fn: callback,
+};
+
+fn(obj.fn); // ??
 ```
 
-上面的原因是因为在类型检查中，Ts 将 point 的结构与 Point 的结构进行比较。它们的结构相同，所以代码通过了。不过需要注意的是这种机制只需要匹配对象字段的子集。
-
-```ts
-const point3 = { x: 12, y: 26, z: 89 };
-logPoint(point3); // 打印 "12, 26"
-
-const rect = { x: 33, y: 3, width: 30, height: 80 };
-logPoint(rect); // 打印 "33, 3"
-
-const color = { hex: "#187ABF" };
-logPoint(color); //err {hex:string} 缺少属性:x, y
-```
-
-类和对象也是可以的,如果对象或类具有所有必需的属性，则 TypeScript 将表示是它们匹配的，而不关注其实现细节。
-
-```ts
-class VirtualPoint {
-  x: number;
-  y: number;
-
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-}
-
-const newVPoint = new VirtualPoint(13, 56);
-logPoint(newVPoint); // 打印 "13, 56"
-```
-
-### 1.5 其它内容
-
-上面的内容仅仅只是部分，如果需要了解更多，推荐前往[TypeScript 中文手册](https://typescript.bootcss.com/)学习，下面是你需要掌握的内容。
-
-TypeScript tree
-├─ 基本类型
-│ ├─ Gone.in.Sixty.Seconds.2000.BluRay.1080p.DTS.HD.MA.5.1.x264-beAst.chs.srt
-│ ├─ Gone.in.Sixty.Seconds.2000.BluRay.1080p.DTS.HD.MA.5.1.x264-beAst.chs.srt\_
-│ ├─ Gone.in.Sixty.Seconds.2000.BluRay.1080p.DTS.HD.MA.5.1.x264-beAst.mkv
-│ ├─ Gone.in.Sixty.Seconds.2000.BluRay.1080p.DTS.HD.MA.5.1.x264-beAst.mkv.jpg
-│ ├─ Underworld.Rise.of.the.Lycans.2009.BluRay.1080p.2Audio.TrueHD.5.1.x265.10bit-BeiTai.mkv
-│ └─ 来源.txt
-├─ 编译
-│ ├─ Van.Helsing.2004.UHD.BluRay.REMUX.2160p.HEVC.DTS-HD.MA7.1-HDS.mkv
-│ └─ 来源.txt
-└─ 魔幻-美国-2005-金刚-King Kong
-├─ King.Kong.2005.UHD.BluRay.REMUX.2160p.HEVC.DTS-X.7.1-HDS.mkv
-└─ 来源.txt
+### 特殊类型
