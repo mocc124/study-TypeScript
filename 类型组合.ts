@@ -25,7 +25,7 @@ type ObjectWithNameArray = Array<{ name: string }>;
 let stringArr2: StringArray = ["a","b"] 
 let objectWithNameArray: ObjectWithNameArray = [{name:"jerry"}] 
 
-// 3. 泛型 动态类型
+// 3. 函数泛型 动态类型
 
 /*
 function str(a: string, b: string): Array<string>{ 
@@ -52,4 +52,40 @@ let numberChange = function (a:number,b:number) {
   return change<number>(a,b)
 }
 console.log(stringChange("a","b"))
-console.log(numberChange(1,7))
+console.log(numberChange(1, 7))
+
+// 4. 接口泛型
+interface MyInter<T> {
+   (arg: T): T
+}
+ 
+function operation<T>(arg: T): T {
+  return arg
+}
+ 
+let result: MyInter<number> = operation
+ 
+result(123)
+
+// 对象字面量泛型
+let foo: { <T>(arg: T): T };
+foo = function <T>(arg: T): T {
+  return arg;
+};
+foo(123);
+
+// 泛型约束
+
+interface Len{ 
+  length: number
+}
+
+function getLen<T extends Len>(a: T) { 
+  return a.length
+}
+
+getLen("abc") // 3
+// getLen(1) // err ,因为 number 没有 length 属性
+
+let obj1: object = { a: 1, b: 2 };
+obj1.a = 3; // error
